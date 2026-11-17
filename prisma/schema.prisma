@@ -1,0 +1,58 @@
+generator client {
+  provider = "prisma-client-js"
+  engineType = "client"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model ChannelConfig {
+  id            String   @id @default(cuid())
+  guildId       String
+  channelId     String   @unique
+  titles        String[] @default([])
+  technologies  String[] @default([])
+  locations     String[] @default([])
+  excluded      String[] @default([])
+  remoteOnly    Boolean  @default(true)
+  minYears      Int?
+  maxYears      Int?
+  enabled       Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  notifications Notification[]
+}
+
+model Job {
+  id                String   @id @default(cuid())
+  source            String
+  externalId        String
+  title             String
+  company           String
+  url               String
+  description       String   @default("")
+  location          String?
+  remote            Boolean  @default(false)
+  technologies      String[] @default([])
+  eligibleLocations String[] @default([])
+  minYears          Int?
+  maxYears          Int?
+  publishedAt       DateTime?
+  createdAt         DateTime @default(now())
+  notifications     Notification[]
+  @@unique([source, externalId])
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  jobId     String
+  configId  String
+  status    String   @default("PENDING")
+  sentAt    DateTime?
+  lastError String?
+  job       Job @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  config    ChannelConfig @relation(fields: [configId], references: [id], onDelete: Cascade)
+  @@unique([jobId, configId])
+}
